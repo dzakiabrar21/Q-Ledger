@@ -1,0 +1,185 @@
+@model QLedger.Models.ViewModels.HandoverCreateViewModel
+@{
+    ViewData["Title"] = "Form Scan Serah Terima MO";
+    ViewData["Category"] = "QUALITY ASSURANCE / SERAH TERIMA MO";
+}
+
+<!-- STATION SUB-HEADER BREADCRUMB (media_1793933433274_f0038fe9.png) -->
+<div class="oqa-breadcrumb-bar">
+    <div>
+        <a asp-controller="Queue" asp-action="Index">Home</a> &gt; 
+        <a asp-controller="Queue" asp-action="Index">Quality Assurance</a> &gt; 
+        <strong class="text-dark">Form Scan Serah Terima MO</strong>
+    </div>
+    <div class="station-badge">GATEKEEPER STATION &bull; OQA-01</div>
+</div>
+
+<!-- CENTERED SCAN CARD (media_1793933433274_f0038fe9.png) -->
+<div class="d-flex justify-content-center align-items-center" style="min-height: 58vh;">
+    <div class="oqa-scan-card w-100">
+        <div class="oqa-scan-icon-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+        <div class="oqa-scan-title">MASUKKAN NOMOR MO</div>
+        <div class="oqa-scan-subtitle">Pindai barcode atau masukkan nomor Manufacturing Order</div>
+        
+        <form id="pir-checker-form">
+            <input class="oqa-scan-input" type="text" id="order-no" name="order-no" value="" maxlength="20" placeholder="MO-2026-004" autofocus autocomplete="off" />
+            <div>
+                <button type="submit" name="btn-pir-check" id="btn-pir-check" class="oqa-scan-btn">
+                    <i class="fa-solid fa-magnifying-glass"></i> CARI
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- HIDDEN ACTUAL FORM TO SUBMIT TO SERVER -->
+<form asp-action="Create" method="post" id="actualSubmitForm" style="display: none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="OrderNo" id="formOrderNo" />
+    <input type="hidden" asp-for="LineId" id="formLineId" value="1" />
+    <input type="hidden" asp-for="ProductId" id="formProductId" value="1" />
+    <input type="hidden" asp-for="LotNo" id="formLotNo" value="LOT-01" />
+    <input type="hidden" asp-for="OrderQty" id="formOrderQty" value="1000" />
+    <input type="hidden" asp-for="PdPicId" id="formPdPicId" value="1" />
+
+    <input type="hidden" asp-for="IsARI" id="formAri" />
+    <input type="hidden" asp-for="IsNRS" id="formNrs" />
+    <input type="hidden" asp-for="IsIFC" id="formIfc" />
+    <input type="hidden" asp-for="IsRRS" id="formRrs" />
+    <input type="hidden" asp-for="IsEFR" id="formEfr" />
+    <input type="hidden" asp-for="IsSplit" id="formSplit" />
+    <input type="hidden" asp-for="IsTopup" id="formTopup" />
+    <input type="hidden" asp-for="Remark" id="formRemark" />
+</form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#order-no').focus();
+
+            $('#pir-checker-form').on('submit', function (e) {
+                e.preventDefault();
+                const orderNo = $('#order-no').val().trim() || 'MO-2026-004';
+
+                // Check Gatekeeper via server
+                $.ajax({
+                    url: '@Url.Action("CheckGatekeeper", "Handover")',
+                    type: 'POST',
+                    data: { lineId: 1, orderNo: orderNo },
+                    success: function (res) {
+                        const dummyItemCode = orderNo.includes('SW') ? 'A3U-301-RED' : 'G2R-1-24VDC';
+                        const dummyItemName = orderNo.includes('SW') ? 'Pushbutton Switch A3U Series' : 'Power Relay G2R Series';
+                        const dummyLineName = orderNo.includes('SW') ? 'Switch Assembly Line 1' : 'Relay Production Line 1';
+                        const dummyLot = 'LOT-RL-05A';
+                        const dummyQty = 1000;
+                        const todayStr = '@DateTime.Now.ToString("yyyy-MM-dd")';
+                        const pirStartStr = '@DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")';
+
+                        const pillOk = '<span style="background: #ecfdf5; color: #059669; font-weight: 600; padding: 2px 10px; border-radius: 4px; font-size: 11px;"><i class="fa fa-check me-1"></i> OK</span>';
+                        const pillLineOk = '<span style="background: #ecfdf5; color: #059669; font-weight: 600; padding: 2px 10px; border-radius: 4px; font-size: 11px;"><i class="fa fa-check me-1"></i> OK - No Active Defect</span>';
+                        const pillDanger = '<span style="background: #fef2f2; color: #dc2626; font-weight: 600; padding: 2px 10px; border-radius: 4px; font-size: 11px;"><i class="fa fa-xmark me-1"></i> BLOCKED</span>';
+
+                        const mcStatusPill = res.machineStatus === 'OK' ? pillOk : pillDanger;
+                        const nrsStatusPill = res.nrsStatus === 'OK' ? pillLineOk : pillDanger;
+
+                        // Build Exact Modal Content (media_1793933433317_2b9b29b6.png)
+                        const htmlContent = `
+                            <div style="font-family: inherit; font-size: 13px; color: #1e293b; text-align: left;">
+                                <div style="text-align: center; font-weight: 700; font-size: 18px; margin-bottom: 20px; color: #0f172a;">MO INFORMATION</div>
+
+                                <table style="width: 100%; border-collapse: collapse; font-size: 13px; line-height: 2;">
+                                    <tr><td style="width: 32%; color: #64748b;">Line Name</td><td style="font-weight: 500;">${dummyLineName}</td></tr>
+                                    <tr><td style="color: #64748b;">MO</td><td style="font-weight: 700; color: #0f172a;">${orderNo}</td></tr>
+                                    <tr><td style="color: #64748b;">Item No</td><td style="font-weight: 500;">${dummyItemCode}</td></tr>
+                                    <tr><td style="color: #64748b;">Type</td><td style="font-weight: 500;">${dummyItemName}</td></tr>
+                                    <tr><td style="color: #64748b;">Lot No</td><td style="font-weight: 500;">${dummyLot}</td></tr>
+                                    <tr><td style="color: #64748b;">Quantity</td><td style="font-weight: 500;">${dummyQty.toLocaleString()} pcs</td></tr>
+                                    <tr><td style="color: #64748b;">MO Release Date</td><td style="font-weight: 500;">${todayStr}</td></tr>
+                                    <tr><td style="color: #64748b;">PIR StartDate</td><td style="font-weight: 500;">${pirStartStr}</td></tr>
+                                </table>
+
+                                <div style="margin-top: 18px; margin-bottom: 8px; font-size: 10.5px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">CHECK ITEMS</div>
+                                <table style="width: 100%; border-collapse: collapse; font-size: 12.5px; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9;">
+                                    <tr style="border-bottom: 1px solid #f1f5f9; height: 36px;">
+                                        <td>Lot Result Check</td>
+                                        <td style="text-align: right;">${pillOk}</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid #f1f5f9; height: 36px;">
+                                        <td>Machine Daily Checklist</td>
+                                        <td style="text-align: right;">${mcStatusPill}</td>
+                                    </tr>
+                                    <tr style="height: 36px;">
+                                        <td>Line Defect/NRS Status</td>
+                                        <td style="text-align: right;">${nrsStatusPill}</td>
+                                    </tr>
+                                </table>
+
+                                <div style="margin-top: 18px; margin-bottom: 10px; font-size: 10.5px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase;">DOKUMEN KHUSUS</div>
+                                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; font-size: 12px; margin-bottom: 10px;">
+                                    <div><input type="checkbox" id="swal_ari" style="margin-right: 5px;"> <label for="swal_ari">ARI</label></div>
+                                    <div><input type="checkbox" id="swal_nrs" style="margin-right: 5px;"> <label for="swal_nrs">NRS</label></div>
+                                    <div><input type="checkbox" id="swal_ifc" style="margin-right: 5px;"> <label for="swal_ifc">IFC</label></div>
+                                    <div><input type="checkbox" id="swal_rrs" style="margin-right: 5px;"> <label for="swal_rrs">RRS</label></div>
+                                    <div><input type="checkbox" id="swal_efr" style="margin-right: 5px;"> <label for="swal_efr">EFR</label></div>
+                                    <div><input type="checkbox" id="swal_split" style="margin-right: 5px;"> <label for="swal_split">SPLIT</label></div>
+                                    <div><input type="checkbox" id="swal_topup" style="margin-right: 5px;"> <label for="swal_topup">TOPUP</label></div>
+                                </div>
+                            </div>
+                        `;
+
+                        if (!res.isEligible) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Penyerahan Ditolak',
+                                text: res.overallMessage,
+                                confirmButtonText: 'TUTUP',
+                                customClass: { popup: 'oqa-swal-modal' }
+                            });
+                            return;
+                        }
+
+                        Swal.fire({
+                            html: htmlContent,
+                            width: '620px',
+                            showCancelButton: true,
+                            cancelButtonText: 'Batal',
+                            confirmButtonText: 'Simpan & Masukkan Antrean',
+                            customClass: { popup: 'oqa-swal-modal' },
+                            focusConfirm: false
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                $('#formOrderNo').val(orderNo);
+                                $('#formLineId').val(orderNo.includes('SW') ? 1 : 2);
+                                $('#formProductId').val(orderNo.includes('SW') ? 3 : 1);
+                                $('#formLotNo').val(dummyLot);
+                                $('#formOrderQty').val(dummyQty);
+
+                                $('#formAri').val($('#swal_ari').is(':checked'));
+                                $('#formNrs').val($('#swal_nrs').is(':checked'));
+                                $('#formIfc').val($('#swal_ifc').is(':checked'));
+                                $('#formRrs').val($('#swal_rrs').is(':checked'));
+                                $('#formEfr').val($('#swal_efr').is(':checked'));
+                                $('#formSplit').val($('#swal_split').is(':checked'));
+                                $('#formTopup').val($('#swal_topup').is(':checked'));
+                                $('#formRemark').val('');
+
+                                $('#actualSubmitForm').submit();
+                            }
+                        });
+                    },
+                    error: function () {
+                        Swal.fire('Error', 'Gagal memverifikasi data MO.', 'error');
+                    }
+                });
+            });
+
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('demo') === '1') {
+                $('#order-no').val('MO-2026-004');
+                setTimeout(() => { $('#pir-checker-form').submit(); }, 300);
+            }
+        });
+    </script>
+}

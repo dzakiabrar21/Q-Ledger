@@ -1,0 +1,162 @@
+@model QLedger.Models.ViewModels.NrsInvestigationViewModel
+@{
+    ViewData["Title"] = $"Form 5-Why ({Model.Report?.NrsNumber})";
+    ViewData["Category"] = "QUALITY / INVESTIGASI AKAR PENYEBAB";
+}
+
+<!-- SUB-HEADER BREADCRUMB -->
+<div class="oqa-breadcrumb-bar">
+    <div>
+        <a asp-controller="Queue" asp-action="Index">Home</a> &gt; 
+        <a asp-controller="Nrs" asp-action="Index">Quality Assurance</a> &gt; 
+        <strong class="text-dark">Form 5-Why (@Model.Report?.NrsNumber)</strong>
+    </div>
+    <div class="station-badge">ROOT CAUSE ANALYSIS &bull; FORM-01</div>
+</div>
+
+<div class="oqa-card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0 text-dark">
+            <i class="fa fa-triangle-exclamation text-danger me-2"></i>FORM INVESTIGASI 5-WHY & TINDAKAN KOREKTIF
+        </h5>
+        <span class="badge @(Model.Report?.Status == "CLOSED" ? "bg-success" : (Model.Report?.Status == "PENDING_APPROVAL" ? "bg-warning text-dark" : "bg-danger"))" style="padding: 6px 12px; font-size: 11px; border-radius: 4px;">
+            STATUS: @Model.Report?.Status
+        </span>
+    </div>
+
+    <!-- INFO TABLE -->
+    <div class="p-3 border rounded bg-light mb-4">
+        <table style="width: 100%; font-size: 13px; line-height: 1.8;">
+            <tr>
+                <td style="width: 15%; color: #64748b;">Tiket NRS</td>
+                <td style="width: 2%;">:</td>
+                <td class="text-danger fw-bold">@Model.Report?.NrsNumber</td>
+                <td style="width: 15%; color: #64748b;">Nomor MO</td>
+                <td style="width: 2%;">:</td>
+                <td class="fw-bold">@Model.Report?.Ledger.OrderNo (@Model.Report?.Ledger.LotNo)</td>
+            </tr>
+            <tr>
+                <td style="color: #64748b;">Area / Lini</td>
+                <td>:</td>
+                <td>@Model.Report?.Ledger.Line.Area (@Model.Report?.Ledger.Line.LineName)</td>
+                <td style="color: #64748b;">Item Code / Type</td>
+                <td>:</td>
+                <td>@Model.Report?.Ledger.Product.ItemCode - @Model.Report?.Ledger.Product.ItemName</td>
+            </tr>
+            <tr>
+                <td style="color: #64748b;">Kategori Defect</td>
+                <td>:</td>
+                <td class="text-danger fw-semibold">@Model.Report?.DefectCategory</td>
+                <td style="color: #64748b;">Defect Qty</td>
+                <td>:</td>
+                <td class="fw-bold">@Model.Report?.DefectQty pcs</td>
+            </tr>
+        </table>
+    </div>
+
+    <form asp-action="Investigate" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="NrsId" />
+
+        <!-- 5-WHY SECTION -->
+        <div class="row g-3 mb-4">
+            <!-- OCCURRENCE -->
+            <div class="col-md-6">
+                <div class="card h-100 border" style="border-radius: 6px;">
+                    <div class="card-header py-2 bg-light fw-bold small text-primary" style="font-size: 12px; letter-spacing: 0.5px;">
+                        <i class="fa fa-cogs me-1"></i> PILAR OCCURRENCE (Mengapa Cacat Terjadi di Mesin?)
+                    </div>
+                    <div class="card-body p-3" style="font-size: 13px;">
+                        <div class="mb-2">
+                            <label class="form-label mb-1 small fw-bold text-muted">Why 1 (Gejala):</label>
+                            <input asp-for="WhyOccur1" class="form-control form-control-sm" style="border-radius: 4px;" />
+                            <span asp-validation-for="WhyOccur1" class="text-danger small"></span>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label mb-1 small fw-bold text-muted">Why 2:</label>
+                            <input asp-for="WhyOccur2" class="form-control form-control-sm" style="border-radius: 4px;" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label mb-1 small fw-bold text-muted">Why 3:</label>
+                            <input asp-for="WhyOccur3" class="form-control form-control-sm" style="border-radius: 4px;" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label mb-1 small fw-bold text-muted">Why 4:</label>
+                            <input asp-for="WhyOccur4" class="form-control form-control-sm" style="border-radius: 4px;" />
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label mb-1 small fw-bold text-danger">Why 5 (Root Cause Occurrence):</label>
+                            <input asp-for="WhyOccur5" class="form-control form-control-sm border-danger" style="border-radius: 4px; font-weight: 600;" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- OUTFLOW -->
+            <div class="col-md-6">
+                <div class="card h-100 border" style="border-radius: 6px;">
+                    <div class="card-header py-2 bg-light fw-bold small text-dark" style="font-size: 12px; letter-spacing: 0.5px;">
+                        <i class="fa fa-shield-alt me-1 text-warning"></i> PILAR OUTFLOW (Mengapa Lolos ke Pos QA?)
+                    </div>
+                    <div class="card-body p-3" style="font-size: 13px;">
+                        <div class="mb-2">
+                            <label class="form-label mb-1 small fw-bold text-muted">Why 1 (Deteksi Lini):</label>
+                            <input asp-for="WhyOutflow1" class="form-control form-control-sm" style="border-radius: 4px;" />
+                            <span asp-validation-for="WhyOutflow1" class="text-danger small"></span>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label mb-1 small fw-bold text-muted">Why 2:</label>
+                            <input asp-for="WhyOutflow2" class="form-control form-control-sm" style="border-radius: 4px;" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label mb-1 small fw-bold text-danger">Why 3 (Root Cause Deteksi):</label>
+                            <input asp-for="WhyOutflow3" class="form-control form-control-sm border-danger" style="border-radius: 4px; font-weight: 600;" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACTIONS & DISPOSITION -->
+        <div class="p-3 border rounded mb-4 bg-white">
+            <h6 class="fw-bold small text-dark mb-3"><i class="fa fa-wrench me-1 text-primary"></i> TINDAKAN KOREKTIF & DISPOSISI</h6>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label small fw-bold text-muted">Tindakan Sementara (Containment):</label>
+                    <textarea asp-for="TemporaryAction" class="form-control form-control-sm" rows="3" style="border-radius: 4px;"></textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-bold text-muted">Tindakan Permanen (Countermeasure):</label>
+                    <textarea asp-for="PermanentAction" class="form-control form-control-sm" rows="3" style="border-radius: 4px;"></textarea>
+                </div>
+            </div>
+            <div class="row g-3 align-items-center">
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-muted">Disposisi Barang Cacat:</label>
+                    <select asp-for="Disposition" class="form-select form-select-sm" style="border-radius: 4px;">
+                        <option value="REWORK">REWORK (Pengerjaan Ulang)</option>
+                        <option value="SCRAP">SCRAP (Afkir / Musnahkan)</option>
+                        <option value="SPECIAL_RELEASE">SPECIAL RELEASE (Dispensasi Khusus)</option>
+                    </select>
+                </div>
+                <div class="col-md-8 pt-4">
+                    <div class="form-check">
+                        <input type="checkbox" name="IsSupervisorApproved" value="true" class="form-check-input" id="spvApprove" />
+                        <label class="form-check-label small fw-bold text-success" for="spvApprove">
+                            <i class="fa fa-check-circle me-1"></i> Verifikasi & Persetujuan Supervisor QA (Tutup Tiket & Buka Kunci Lini)
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <a asp-action="Index" class="btn btn-sm btn-outline-secondary" style="border-radius: 4px;">
+                <i class="fa fa-arrow-left me-1"></i> Kembali ke Daftar NRS
+            </a>
+            <button type="submit" class="btn btn-sm" style="background: var(--oqa-primary); color: white; padding: 8px 24px; font-weight: 600; border-radius: 4px;">
+                <i class="fa fa-save me-1"></i> Simpan Hasil Investigasi
+            </button>
+        </div>
+    </form>
+</div>

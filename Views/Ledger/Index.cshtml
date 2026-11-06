@@ -1,0 +1,195 @@
+@model QLedger.Models.ViewModels.LedgerFilterViewModel
+@{
+    ViewData["Title"] = "OQA Ledger";
+    ViewData["Category"] = "QUALITY / BUKU BESAR INSPEKSI";
+}
+
+<!-- SUB-HEADER BREADCRUMB -->
+<div class="oqa-breadcrumb-bar">
+    <div>
+        <a asp-controller="Queue" asp-action="Index">Home</a> &gt; 
+        <a asp-controller="Queue" asp-action="Index">Quality Assurance</a> &gt; 
+        <strong class="text-dark">OQA Ledger (Buku Besar)</strong>
+    </div>
+    <div class="station-badge">AUDIT TRAIL &bull; MASTER LEDGER</div>
+</div>
+
+<div class="oqa-card p-0 overflow-hidden">
+    <div class="p-3 d-flex justify-content-between align-items-center">
+        <div>
+            <h6 class="fw-bold mb-0 text-dark" style="font-size: 15px;">OQA Ledger (Buku Besar Inspeksi)</h6>
+            <span class="text-muted" style="font-size: 12px;">Seluruh riwayat transaksi inspeksi lot dan catatan mutu digital</span>
+        </div>
+        <div>
+            <a asp-action="ExportExcel" 
+               asp-route-StartDate="@(Model.StartDate?.ToString("yyyy-MM-dd"))"
+               asp-route-EndDate="@(Model.EndDate?.ToString("yyyy-MM-dd"))"
+               asp-route-LineId="@Model.LineId"
+               asp-route-Status="@Model.Status"
+               asp-route-Judgement="@Model.Judgement"
+               asp-route-TagFilter="@Model.TagFilter"
+               class="btn btn-sm" style="background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b; font-weight: 600; font-size: 12px; border-radius: 4px;">
+                <i class="fa-solid fa-file-excel text-success me-1"></i> Export Data Excel
+            </a>
+        </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="p-3 bg-light border-top border-bottom">
+        <form asp-action="Index" method="get">
+            <div class="row g-2 align-items-center" style="font-size: 12.5px;">
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold mb-1 text-muted">Dari:</label>
+                    <input type="date" name="StartDate" class="form-control form-control-sm" value="@(Model.StartDate?.ToString("yyyy-MM-dd"))" style="border-radius: 4px;" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold mb-1 text-muted">Sampai:</label>
+                    <input type="date" name="EndDate" class="form-control form-control-sm" value="@(Model.EndDate?.ToString("yyyy-MM-dd"))" style="border-radius: 4px;" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold mb-1 text-muted">Lini:</label>
+                    <select name="LineId" class="form-select form-select-sm" asp-items="ViewBag.Lines" style="border-radius: 4px;">
+                        <option value="">-- Semua Lini --</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold mb-1 text-muted">Status:</label>
+                    <select name="Status" class="form-select form-select-sm" style="border-radius: 4px;">
+                        <option value="ALL">-- Semua Status --</option>
+                        <option value="WAITING" selected="@(Model.Status == "WAITING")">Waiting</option>
+                        <option value="UNDER_INSPECTION" selected="@(Model.Status == "UNDER_INSPECTION")">Under Inspection</option>
+                        <option value="FINISH_OK" selected="@(Model.Status == "FINISH_OK")">Finish</option>
+                        <option value="HOLD" selected="@(Model.Status == "HOLD")">Hold</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold mb-1 text-muted">Dokumen:</label>
+                    <select name="TagFilter" class="form-select form-select-sm" style="border-radius: 4px;">
+                        <option value="ALL">-- Semua --</option>
+                        <option value="ARI" selected="@(Model.TagFilter == "ARI")">ARI</option>
+                        <option value="IFC" selected="@(Model.TagFilter == "IFC")">IFC</option>
+                        <option value="RRS" selected="@(Model.TagFilter == "RRS")">RRS</option>
+                        <option value="EFR" selected="@(Model.TagFilter == "EFR")">EFR</option>
+                        <option value="SPLIT" selected="@(Model.TagFilter == "SPLIT")">SPLIT</option>
+                        <option value="TOPUP" selected="@(Model.TagFilter == "TOPUP")">TOPUP</option>
+                    </select>
+                </div>
+                <div class="col-md-2 pt-4">
+                    <button type="submit" class="btn btn-sm w-100" style="background: var(--oqa-primary); color: white; font-weight: 600; border-radius: 4px;">
+                        <i class="fa fa-filter me-1"></i> Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- MASTER TABLE -->
+    <table class="oqa-table align-middle">
+        <thead>
+            <tr>
+                <th style="width: 3%;">No</th>
+                <th style="width: 9%;">MO No.</th>
+                <th style="width: 8%;">Type Code</th>
+                <th>Type Name</th>
+                <th style="width: 7%;">Lot No</th>
+                <th style="width: 6%;">Qty</th>
+                <th style="width: 6%;">Dok</th>
+                <th style="width: 8%;">Status</th>
+                <th style="width: 8%;">Incoming</th>
+                <th style="width: 7%;">Start</th>
+                <th style="width: 7%;">Finish</th>
+                <th style="width: 8%;">Inspector</th>
+                <th style="width: 6%; text-align: center;">OQA Judge</th>
+                <th>Remark</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{ int no = 1; }
+            @if (Model.Items.Any())
+            {
+                foreach (var item in Model.Items)
+                {
+                    var docs = new List<string>();
+                    if (item.IsARI) docs.Add("ARI");
+                    if (item.IsNRS) docs.Add("NRS");
+                    if (item.IsIFC) docs.Add("IFC");
+                    if (item.IsRRS) docs.Add("RRS");
+                    if (item.IsEFR) docs.Add("EFR");
+                    if (item.IsSplit) docs.Add("SPLIT");
+                    if (item.IsTopup) docs.Add("TOPUP");
+
+                    <tr>
+                        <td class="text-center text-muted fw-bold">@no</td>
+                        <td><strong style="color: var(--oqa-primary) !important;">@item.OrderNo</strong></td>
+                        <td>@item.Product.ItemCode</td>
+                        <td>@item.Product.ItemName</td>
+                        <td>@item.LotNo</td>
+                        <td class="fw-semibold">@item.OrderQty.ToString("N0")</td>
+                        <td>
+                            @if (docs.Any())
+                            {
+                                foreach (var d in docs)
+                                {
+                                    <span class="badge" style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-size: 10px; margin-right: 2px;">@d</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.Status == "WAITING")
+                            {
+                                <span class="oqa-status-pill waiting"><span class="dot"></span> Waiting</span>
+                            }
+                            else if (item.Status == "UNDER_INSPECTION")
+                            {
+                                <span class="oqa-status-pill inspection"><span class="dot"></span> Inspection</span>
+                            }
+                            else if (item.Status == "FINISH_OK")
+                            {
+                                <span class="oqa-status-pill ok"><span class="dot"></span> Finish</span>
+                            }
+                            else if (item.Status == "HOLD")
+                            {
+                                <span class="oqa-status-pill hold"><span class="dot"></span> HOLD</span>
+                            }
+                        </td>
+                        <td style="font-size: 11px;">@item.PdInTime.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td style="font-size: 11px;">@(item.QaStartTime?.ToString("HH:mm:ss") ?? "-")</td>
+                        <td style="font-size: 11px;">@(item.QaFinishTime?.ToString("HH:mm:ss") ?? "-")</td>
+                        <td>@(item.QaInspector?.FullName ?? "-")</td>
+                        <td class="text-center">
+                            @if (item.QaJudgement == "OK")
+                            {
+                                <span class="badge" style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; font-weight: 700;">OK</span>
+                            }
+                            else if (item.QaJudgement == "NG")
+                            {
+                                <span class="badge" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; font-weight: 700;">NG</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td class="text-muted" style="font-size: 11.5px;">@(item.Remark ?? "-")</td>
+                    </tr>
+                    no++;
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="14" class="text-center py-4 text-muted">Tidak ada data ditemukan sesuai filter.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="oqa-table-footer">
+        <div>TOTAL @Model.Items.Count().ToString("D2") RECORDS</div>
+        <div>DATA LOGGED</div>
+    </div>
+</div>

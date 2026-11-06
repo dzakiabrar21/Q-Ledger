@@ -1,0 +1,211 @@
+<!DOCTYPE HTML>
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - OQA Control</title>
+
+    <!-- Font: Open Sans (Enterprise Clean) -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap">
+
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <!-- Bootstrap 5 (Base Grid only) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+
+    <!-- OQA ANTI-SLOP ENTERPRISE INDUSTRIAL STYLESHEET -->
+    <link rel="stylesheet" href="~/css/oqa-anti-slop.css" />
+</head>
+<body class="@(Context.Request.Query["collapsed"] == "1" ? "sidebar-collapsed" : "")">
+    <!-- FULL HEIGHT LEFT SIDEBAR (Q-LEDGER) -->
+    <aside class="oqa-sidebar">
+        <div class="oqa-sidebar-header">
+            <a href="javascript:void(0);" id="sidebar-toggle-sidebar" class="hamburger-btn" title="Tutup Sidebar">
+                <i class="fa fa-bars"></i>
+            </a>
+            <div class="oqa-brand-text">
+                <h5>Q-LEDGER</h5>
+                <span>QA OPERATIONS SYSTEM</span>
+            </div>
+        </div>
+
+        <!-- MAIN -->
+        <div class="oqa-nav-group">
+            <h6 class="oqa-nav-group-title">MAIN</h6>
+        </div>
+        <ul class="oqa-nav-list">
+            <li class="oqa-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Queue" ? "active" : "")">
+                <a asp-controller="Queue" asp-action="Index">
+                    <i class="fa-solid fa-table-cells-large"></i>
+                    <span>OQA Dashboard</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- OPERATIONS -->
+        <div class="oqa-nav-group mt-2">
+            <h6 class="oqa-nav-group-title">OPERATIONS</h6>
+        </div>
+        <ul class="oqa-nav-list">
+            <li class="oqa-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Handover" ? "active" : "")">
+                <a asp-controller="Handover" asp-action="Index">
+                    <i class="fa-solid fa-barcode"></i>
+                    <span>Serah Terima MO</span>
+                </a>
+            </li>
+            <li class="oqa-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Inspection" ? "active" : "")">
+                <a asp-controller="Inspection" asp-action="Index">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                    <span>Pos Inspeksi QA</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- QUALITY -->
+        <div class="oqa-nav-group mt-2">
+            <h6 class="oqa-nav-group-title">QUALITY</h6>
+        </div>
+        <ul class="oqa-nav-list">
+            <li class="oqa-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Nrs" ? "active" : "")">
+                <a asp-controller="Nrs" asp-action="Index">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Defect & 5-Why</span>
+                </a>
+            </li>
+            <li class="oqa-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Ledger" ? "active" : "")">
+                <a asp-controller="Ledger" asp-action="Index">
+                    <i class="fa-solid fa-table-list"></i>
+                    <span>OQA Ledger</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- SIDEBAR FOOTER -->
+        <div class="oqa-sidebar-footer">
+            <span>TERMINAL &nbsp; <strong>OQA-01</strong></span>
+            <span>VERSION &nbsp; <strong>3.2.04</strong></span>
+        </div>
+    </aside>
+
+    <!-- FIXED TOP NAVBAR (WHITE CRISP) -->
+    <header class="oqa-topbar">
+        <div class="d-flex align-items-center">
+            <button type="button" id="sidebar-toggle-topbar" class="oqa-hamburger-toggle me-3" title="Buka/Tutup Sidebar">
+                <i class="fa fa-bars"></i>
+            </button>
+            <div class="oqa-topbar-title-section">
+                <div class="category">
+                    <span class="badge" style="background:#e0f2fe; color:#0369a1; font-weight:700; font-size:9.5px; padding: 2px 6px; border-radius: 3px; margin-right:4px;">Q-LEDGER</span>
+                    @(ViewData["Category"] ?? "QUALITY ASSURANCE / OQA DASHBOARD")
+                </div>
+                <h1>@ViewData["Title"]</h1>
+            </div>
+        </div>
+
+        <div class="oqa-topbar-right">
+            <!-- STATUS -->
+            <div class="oqa-status-indicator">
+                <span class="oqa-status-dot"></span>
+                <span>SYSTEM ONLINE</span>
+            </div>
+
+            <div class="oqa-divider-vertical"></div>
+
+            <!-- SHIFT & TIME -->
+            <div class="oqa-shift-info">
+                <div class="shift-name">SHIFT A</div>
+                <div class="shift-time" id="live-shift-clock">@DateTime.Now.ToString("dd MMM yyyy - HH:mm:ss", new System.Globalization.CultureInfo("en-US")).ToUpper()</div>
+            </div>
+
+            <!-- USER PROFILE PILL -->
+            <div class="oqa-user-pill">
+                <div class="oqa-user-avatar">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div class="oqa-user-details">
+                    <div class="user-name">QA Inspector</div>
+                    <div class="user-role">OQA Station</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN BODY CANVAS -->
+    <main class="oqa-main-wrapper">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show mb-3 py-2 small" role="alert">
+                <i class="fa-solid fa-check-circle me-1"></i> @TempData["SuccessMessage"]
+                <button type="button" class="btn-close py-2" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show mb-3 py-2 small" role="alert">
+                <i class="fa-solid fa-exclamation-circle me-1"></i> @TempData["ErrorMessage"]
+                <button type="button" class="btn-close py-2" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        @RenderBody()
+    </main>
+
+    <!-- CORE SCRIPTS -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+
+    <script>
+        // Dynamic Collapsible Sidebar with localStorage persistence
+        function toggleSidebar() {
+            $('body').toggleClass('sidebar-collapsed');
+            const isCollapsed = $('body').hasClass('sidebar-collapsed');
+            localStorage.setItem('qledger_sidebar_collapsed', isCollapsed ? '1' : '0');
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('collapsed') === '1' || localStorage.getItem('qledger_sidebar_collapsed') === '1') {
+            $('body').addClass('sidebar-collapsed');
+        }
+
+        $('#sidebar-toggle-sidebar, #sidebar-toggle-topbar').click(function (e) {
+            e.preventDefault();
+            toggleSidebar();
+        });
+
+        // Live clock
+        setInterval(function() {
+            const now = new Date();
+            const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = months[now.getMonth()];
+            const year = now.getFullYear();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            $('#live-shift-clock').text(`${day} ${month} ${year} - ${hours}:${minutes}:${seconds}`);
+        }, 1000);
+
+        // SignalR live update
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/queueHub")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on("QueueUpdated", function () {
+            if (typeof onLiveQueueUpdated === "function") {
+                onLiveQueueUpdated();
+            }
+        });
+
+        connection.start().catch(err => console.error(err.toString()));
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,278 @@
+@model QLedger.Models.ViewModels.QueueBoardViewModel
+@{
+    ViewData["Title"] = "Outgoing Quality Assurance";
+    ViewData["Category"] = "QUALITY ASSURANCE / OQA DASHBOARD";
+
+    var switch1 = Model.AreaSummaries.FirstOrDefault(x => x.AreaName.Contains("SWITCH"));
+    var relay1 = Model.AreaSummaries.FirstOrDefault(x => x.AreaName.Contains("RELAY 1"));
+    var relay2 = Model.AreaSummaries.FirstOrDefault(x => x.AreaName.Contains("RELAY 2"));
+
+    var inProgressItem = Model.InProgressList.FirstOrDefault();
+    var waitingCount = Model.WaitingList.Count;
+    var inProgressCount = Model.InProgressList.Count;
+    var totalOrders = waitingCount + inProgressCount;
+
+    var switchWaiting = Model.WaitingList.Count(x => x.Line.Area.Contains("SWITCH"));
+    var relay1Waiting = Model.WaitingList.Count(x => x.Line.Area.Contains("RELAY 1"));
+    var relay2Waiting = Model.WaitingList.Count(x => x.Line.Area.Contains("RELAY 2"));
+}
+
+<!-- 1. KPI / METRIC STRIP (media_1793933433279_b4edbb3a.png) -->
+<div class="oqa-kpi-grid">
+    <div class="oqa-kpi-item">
+        <div class="oqa-kpi-label">TOTAL ANTREAN</div>
+        <div class="oqa-kpi-val">@totalOrders.ToString("D2")</div>
+        <div class="oqa-kpi-sub">@totalOrders production orders</div>
+    </div>
+    <div class="oqa-kpi-item">
+        <div class="oqa-kpi-label">SEDANG DIPERIKSA</div>
+        <div class="oqa-kpi-val">@inProgressCount.ToString("D2")</div>
+        <div class="oqa-kpi-sub">@(inProgressItem != null ? inProgressItem.OrderNo : "None")</div>
+    </div>
+    <div class="oqa-kpi-item">
+        <div class="oqa-kpi-label">MENUNGGU</div>
+        <div class="oqa-kpi-val">@waitingCount.ToString("D2")</div>
+        <div class="oqa-kpi-sub">Switch 1 - Relay 1</div>
+    </div>
+    <div class="oqa-kpi-item">
+        <div class="oqa-kpi-label">LINI AKTIF</div>
+        <div class="oqa-kpi-val">03</div>
+        <div class="oqa-kpi-sub">All lines available</div>
+    </div>
+    <div class="oqa-kpi-item">
+        <div class="oqa-kpi-label">LAST SYNC</div>
+        <div class="oqa-kpi-val" id="last-sync-time">@DateTime.Now.ToString("HH:mm:ss")</div>
+        <div class="oqa-kpi-sub">WIB</div>
+    </div>
+</div>
+
+<!-- 2. NEXT INSPECTION (3 LINE CARDS) -->
+<div class="oqa-card">
+    <div class="d-flex justify-content-between align-items-center mb-1">
+        <div>
+            <h6 class="fw-bold mb-0 text-dark" style="font-size: 15px;">Next inspection</h6>
+            <span class="text-muted" style="font-size: 12px;">Urutan pemeriksaan berikutnya per lini produksi</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="oqa-status-dot"></span>
+            <span class="fw-bold text-success" style="font-size: 11px; letter-spacing: 0.5px;">LIVE QUEUE</span>
+        </div>
+    </div>
+
+    <div class="oqa-line-cards-grid">
+        <!-- SWITCH 1 CARD -->
+        <div class="oqa-line-card switch">
+            <div class="oqa-line-card-header">
+                <div class="line-title">
+                    <span class="square-icon"></span>
+                    <span>SWITCH 1</span>
+                </div>
+                <div class="waiting-count">@switchWaiting waiting</div>
+            </div>
+            <div class="oqa-line-card-body">
+                <div class="queue-col">
+                    <div class="label-sub">QUEUE</div>
+                    <div class="queue-num">@(switch1?.NextLot != null ? switch1.NextLot.QueueNumber.ToString("D2") : "--")</div>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="label-sub">MANUFACTURING ORDER</div>
+                    <div class="mo-num">@(switch1?.NextLot != null ? switch1.NextLot.OrderNo : "NO ORDER")</div>
+                </div>
+            </div>
+            <div class="oqa-line-card-footer">
+                <span>@(switch1?.NextLot != null ? $"{switch1.NextLot.Product.ItemCode} | {switch1.NextLot.Product.ItemName}" : "---")</span>
+                <span>@(switch1?.NextLot != null ? switch1.NextLot.PdInTime.ToString("HH:mm") : "--:--")</span>
+            </div>
+        </div>
+
+        <!-- RELAY 1 CARD -->
+        <div class="oqa-line-card relay1">
+            <div class="oqa-line-card-header">
+                <div class="line-title">
+                    <span class="square-icon"></span>
+                    <span>RELAY 1</span>
+                </div>
+                <div class="waiting-count">@relay1Waiting waiting</div>
+            </div>
+            <div class="oqa-line-card-body">
+                <div class="queue-col">
+                    <div class="label-sub">QUEUE</div>
+                    <div class="queue-num">@(relay1?.NextLot != null ? relay1.NextLot.QueueNumber.ToString("D2") : "--")</div>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="label-sub">MANUFACTURING ORDER</div>
+                    <div class="mo-num">@(relay1?.NextLot != null ? relay1.NextLot.OrderNo : "NO ORDER")</div>
+                </div>
+            </div>
+            <div class="oqa-line-card-footer">
+                <span>@(relay1?.NextLot != null ? $"{relay1.NextLot.Product.ItemCode} | {relay1.NextLot.Product.ItemName}" : "---")</span>
+                <span>@(relay1?.NextLot != null ? relay1.NextLot.PdInTime.ToString("HH:mm") : "--:--")</span>
+            </div>
+        </div>
+
+        <!-- RELAY 2 CARD -->
+        <div class="oqa-line-card relay2">
+            <div class="oqa-line-card-header">
+                <div class="line-title">
+                    <span class="square-icon"></span>
+                    <span>RELAY 2</span>
+                </div>
+                <div class="waiting-count">@relay2Waiting waiting</div>
+            </div>
+            <div class="oqa-line-card-body">
+                <div class="queue-col">
+                    <div class="label-sub">QUEUE</div>
+                    <div class="queue-num">@(relay2?.NextLot != null ? relay2.NextLot.QueueNumber.ToString("D2") : "—")</div>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="label-sub">MANUFACTURING ORDER</div>
+                    <div class="mo-num">@(relay2?.NextLot != null ? relay2.NextLot.OrderNo : "NO ORDER")</div>
+                </div>
+            </div>
+            <div class="oqa-line-card-footer">
+                <span>@(relay2?.NextLot != null ? $"{relay2.NextLot.Product.ItemCode} | {relay2.NextLot.Product.ItemName}" : "— | No production order | —")</span>
+                <span>@(relay2?.NextLot != null ? relay2.NextLot.PdInTime.ToString("HH:mm") : "—")</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3. INCOMING INSPECTION QUEUE TABLE -->
+<div class="oqa-card p-0 overflow-hidden">
+    <div class="p-3 d-flex justify-content-between align-items-center">
+        <div>
+            <h6 class="fw-bold mb-0 text-dark" style="font-size: 15px;">Incoming inspection queue</h6>
+            <span class="text-muted" style="font-size: 12px;">Antrean masuk dari seluruh lini produksi</span>
+        </div>
+        <div class="oqa-filter-group">
+            <button type="button" class="oqa-filter-btn active filter-line-btn" data-line="all">Semua Lini</button>
+            <button type="button" class="oqa-filter-btn filter-line-btn" data-line="SWITCH 1">Switch 1</button>
+            <button type="button" class="oqa-filter-btn filter-line-btn" data-line="RELAY 1">Relay 1</button>
+            <button type="button" class="oqa-filter-btn filter-line-btn" data-line="RELAY 2">Relay 2</button>
+        </div>
+    </div>
+
+    <!-- SUB-BAR: IN PROGRESS & VISIBLE ROWS -->
+    <div class="px-3 py-2 bg-light d-flex justify-content-between align-items-center border-top border-bottom" style="font-size: 11px;">
+        <div class="d-flex align-items-center gap-2">
+            <span style="width: 8px; height: 8px; background: #16a34a; display: inline-block;"></span>
+            <span class="fw-bold text-dark">IN PROGRESS @(inProgressItem != null ? inProgressItem.OrderNo : "-")</span>
+        </div>
+        <div class="text-muted fw-semibold">
+            VISIBLE ROWS <span id="visible-row-count">@Model.WaitingList.Count.ToString("D2")</span>
+        </div>
+    </div>
+
+    <table class="oqa-table" id="table-incoming">
+        <thead>
+            <tr>
+                <th style="width: 5%;">NO</th>
+                <th style="width: 7%;">QUEUE</th>
+                <th style="width: 14%;">LINE</th>
+                <th style="width: 15%;">MO NUMBER</th>
+                <th style="width: 22%;">PRODUCT TYPE</th>
+                <th style="width: 13%;">LOT NUMBER</th>
+                <th style="width: 8%;">QTY</th>
+                <th style="width: 10%;">ENTRY TIME</th>
+                <th style="width: 8%;">STATUS</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.WaitingList.Any())
+            {
+                int rowIdx = 1;
+                foreach (var item in Model.WaitingList)
+                {
+                    <tr class="queue-row" data-line-name="@item.Line.LineName.ToUpper()">
+                        <td>@rowIdx.ToString("D2")</td>
+                        <td class="fw-bold">@item.QueueNumber.ToString("D2")</td>
+                        <td>
+                            @if (item.Line.LineName.Contains("SWITCH"))
+                            {
+                                <span style="display:inline-block; width:8px; height:8px; background:#b8740c; margin-right:6px;"></span>
+                                <span class="fw-semibold">@item.Line.LineName.ToUpper()</span>
+                            }
+                            else if (item.Line.LineName.Contains("RELAY 1"))
+                            {
+                                <span style="display:inline-block; width:8px; height:8px; background:#1f6645; margin-right:6px;"></span>
+                                <span class="fw-semibold">@item.Line.LineName.ToUpper()</span>
+                            }
+                            else
+                            {
+                                <span style="display:inline-block; width:8px; height:8px; background:#2b5c8f; margin-right:6px;"></span>
+                                <span class="fw-semibold">@item.Line.LineName.ToUpper()</span>
+                            }
+                        </td>
+                        <td>
+                            <strong style="color: var(--oqa-primary) !important;">@item.OrderNo</strong>
+                        </td>
+                        <td>@item.Product.ItemName</td>
+                        <td>@item.LotNo</td>
+                        <td><strong>@item.OrderQty.ToString("N0")</strong> <span class="text-muted" style="font-size:10px;">PCS</span></td>
+                        <td>@item.PdInTime.ToString("HH:mm:ss")</td>
+                        <td>
+                            <span class="oqa-status-pill waiting">
+                                <span class="dot"></span> WAITING
+                            </span>
+                        </td>
+                    </tr>
+                    rowIdx++;
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="9" class="text-center py-4 text-muted">Belum ada antrean masuk saat ini.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="oqa-table-footer">
+        <div>TOTAL @Model.WaitingList.Count.ToString("D2") RECORDS</div>
+        <div>AUTO REFRESH - 30 SEC</div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Filter Lini
+        $('.filter-line-btn').click(function () {
+            $('.filter-line-btn').removeClass('active');
+            $(this).addClass('active');
+
+            const selectedLine = $(this).data('line');
+            let visibleCount = 0;
+
+            if (selectedLine === 'all') {
+                $('.queue-row').show();
+                visibleCount = $('.queue-row').length;
+            } else {
+                $('.queue-row').each(function () {
+                    const rowLine = $(this).data('line-name');
+                    if (rowLine.indexOf(selectedLine.toUpperCase()) !== -1) {
+                        $(this).show();
+                        visibleCount++;
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            }
+
+            $('#visible-row-count').text(String(visibleCount).padStart(2, '0'));
+        });
+
+        // Auto refresh
+        setInterval(function() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            $('#last-sync-time').text(`${h}:${m}:${s}`);
+        }, 1000);
+
+        function onLiveQueueUpdated() {
+            window.location.reload();
+        }
+    </script>
+}

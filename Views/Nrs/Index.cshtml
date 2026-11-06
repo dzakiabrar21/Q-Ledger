@@ -1,0 +1,98 @@
+@model IEnumerable<QLedger.Models.Entities.NrsReport>
+@{
+    ViewData["Title"] = "Defect & 5-Why (NRS)";
+    ViewData["Category"] = "QUALITY / NON-CONFORMANCE REPORT SYSTEM";
+    var currentStatus = (string)ViewBag.CurrentStatus;
+}
+
+<!-- SUB-HEADER BREADCRUMB -->
+<div class="oqa-breadcrumb-bar">
+    <div>
+        <a asp-controller="Queue" asp-action="Index">Home</a> &gt; 
+        <a asp-controller="Queue" asp-action="Index">Quality Assurance</a> &gt; 
+        <strong class="text-dark">Defect & 5-Why (NRS)</strong>
+    </div>
+    <div class="station-badge">QUALITY GATE &bull; CORRECTIVE ACTION</div>
+</div>
+
+<div class="oqa-card p-0 overflow-hidden">
+    <div class="p-3 d-flex justify-content-between align-items-center">
+        <div>
+            <h6 class="fw-bold mb-0 text-dark" style="font-size: 15px;">Daftar Tiket Defect & Penahanan Mutu</h6>
+            <span class="text-muted" style="font-size: 12px;">Sistem penahanan lot bermasalah dan investigasi akar penyebab 5-Why</span>
+        </div>
+        <div class="oqa-filter-group">
+            <a asp-action="Index" asp-route-status="ALL" class="oqa-filter-btn @(currentStatus == "ALL" ? "active" : "")">All</a>
+            <a asp-action="Index" asp-route-status="OPEN" class="oqa-filter-btn @(currentStatus == "OPEN" ? "active" : "")">Open</a>
+            <a asp-action="Index" asp-route-status="PENDING_APPROVAL" class="oqa-filter-btn @(currentStatus == "PENDING_APPROVAL" ? "active" : "")">Pending Approval</a>
+            <a asp-action="Index" asp-route-status="CLOSED" class="oqa-filter-btn @(currentStatus == "CLOSED" ? "active" : "")">Closed</a>
+        </div>
+    </div>
+
+    <table class="oqa-table align-middle">
+        <thead>
+            <tr>
+                <th style="width: 14%;">No. Tiket NRS</th>
+                <th style="width: 13%;">MO No.</th>
+                <th>Type Name</th>
+                <th style="width: 10%;">Area</th>
+                <th style="width: 18%;">Defect Category</th>
+                <th style="width: 8%;">Defect Qty</th>
+                <th style="width: 14%;">Status</th>
+                <th style="width: 10%;">Disposisi</th>
+                <th style="width: 10%; text-align: center;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Any())
+            {
+                foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="fw-bold text-danger">@item.NrsNumber</td>
+                        <td><strong style="color: var(--oqa-primary) !important;">@item.Ledger.OrderNo</strong></td>
+                        <td>@item.Ledger.Product.ItemName</td>
+                        <td>
+                            <span class="badge" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; font-weight: 600;">@item.Ledger.Line.Area</span>
+                        </td>
+                        <td>@item.DefectCategory</td>
+                        <td class="fw-bold">@item.DefectQty pcs</td>
+                        <td>
+                            @if (item.Status == "OPEN")
+                            {
+                                <span class="badge" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; font-weight: 600;">Open (Butuh 5-Why)</span>
+                            }
+                            else if (item.Status == "PENDING_APPROVAL")
+                            {
+                                <span class="badge" style="background: #fffbeb; color: #d97706; border: 1px solid #fde68a; font-weight: 600;">Pending Approval</span>
+                            }
+                            else
+                            {
+                                <span class="badge" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; font-weight: 600;">Closed</span>
+                            }
+                        </td>
+                        <td>
+                            @(item.Disposition ?? "-")
+                        </td>
+                        <td class="text-center">
+                            <a asp-action="Investigate" asp-route-id="@item.NrsId" class="btn btn-sm" style="background: var(--oqa-primary); color: white; padding: 4px 12px; font-size: 11.5px; font-weight: 600; border-radius: 4px;">
+                                <i class="fas fa-edit me-1"></i> Form 5-Why
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="9" class="text-center py-4 text-muted">Tidak ada tiket defect aktif.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    
+    <div class="oqa-table-footer">
+        <div>TOTAL @Model.Count().ToString("D2") TICKETS</div>
+        <div>GATEKEEPER ACTIVE</div>
+    </div>
+</div>

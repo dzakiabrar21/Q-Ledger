@@ -1,0 +1,363 @@
+@model IEnumerable<QLedger.Models.Entities.InspectionLedger>
+@{
+    ViewData["Title"] = "Pos Kerja Inspeksi QA";
+    ViewData["Category"] = "OPERATIONS / POS KERJA INSPEKSI QA";
+}
+
+<!-- STATION SUB-HEADER BREADCRUMB -->
+<div class="oqa-breadcrumb-bar">
+    <div>
+        <a asp-controller="Queue" asp-action="Index">Home</a> &gt; 
+        <a asp-controller="Queue" asp-action="Index">Quality Assurance</a> &gt; 
+        <strong class="text-dark">Pos Kerja Inspeksi QA</strong>
+    </div>
+    <div class="station-badge">INSPECTION STATION &bull; WORKSPACE-01</div>
+</div>
+
+<div class="oqa-card p-0 overflow-hidden">
+    <div class="p-3 d-flex justify-content-between align-items-center">
+        <div>
+            <h6 class="fw-bold mb-0 text-dark" style="font-size: 15px;">Daftar Lot Antrean & Inspeksi Aktif</h6>
+            <span class="text-muted" style="font-size: 12px;">Mulai timer inspeksi dan berikan putusan mutu AQL</span>
+        </div>
+        <div>
+            <a asp-controller="Queue" asp-action="Index" class="oqa-filter-btn">
+                <i class="fa fa-tv me-1"></i> Kembali ke Antrean
+            </a>
+        </div>
+    </div>
+
+    <table class="oqa-table align-middle">
+        <thead>
+            <tr>
+                <th style="width: 4%;">No</th>
+                <th style="width: 12%;">MO No.</th>
+                <th style="width: 14%;">Type Code</th>
+                <th>Type Name</th>
+                <th style="width: 10%;">Lot No</th>
+                <th style="width: 10%;">Area / Lini</th>
+                <th style="width: 8%;">Qty</th>
+                <th style="width: 12%;">Status</th>
+                <th style="width: 10%;">Start Time</th>
+                <th style="width: 12%; text-align: center;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{ int no = 1; }
+            @if (Model.Any())
+            {
+                foreach (var item in Model)
+                {
+                    var isUnderInspection = item.Status == "UNDER_INSPECTION";
+                    <tr style="@(isUnderInspection ? "background: #f0fdf4;" : "")">
+                        <td class="text-center text-muted fw-bold">@no</td>
+                        <td>
+                            <strong style="color: var(--oqa-primary) !important;">@item.OrderNo</strong>
+                        </td>
+                        <td>@item.Product.ItemCode</td>
+                        <td>@item.Product.ItemName</td>
+                        <td>@item.LotNo</td>
+                        <td>
+                            <span class="badge" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; font-weight: 600;">@item.Line.Area</span>
+                        </td>
+                        <td class="fw-semibold">@item.OrderQty.ToString("N0") <span class="text-muted" style="font-size: 10px;">pcs</span></td>
+                        <td>
+                            @if (isUnderInspection)
+                            {
+                                <span class="oqa-status-pill inspection">
+                                    <span class="dot"></span> Under Inspection
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="oqa-status-pill waiting">
+                                    <span class="dot"></span> Waiting
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            @(item.QaStartTime?.ToString("HH:mm:ss") ?? "--:--:--")
+                        </td>
+                        <td class="text-center">
+                            @if (!isUnderInspection)
+                            {
+                                <button class="btn btn-sm btn-start-insp" 
+                                        style="background: var(--oqa-btn-success); color: white; padding: 4px 12px; font-size: 12px; font-weight: 600; border-radius: 4px;"
+                                        data-id="@item.LedgerId" 
+                                        data-mo="@item.OrderNo" 
+                                        data-code="@item.Product.ItemCode" 
+                                        data-name="@item.Product.ItemName"
+                                        data-lot="@item.LotNo"
+                                        data-qty="@item.OrderQty">
+                                    <i class="fa fa-play me-1"></i> Mulai
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-sm btn-open-order-form" 
+                                        style="background: var(--oqa-primary); color: white; padding: 4px 12px; font-size: 12px; font-weight: 600; border-radius: 4px;"
+                                        data-id="@item.LedgerId" 
+                                        data-mo="@item.OrderNo" 
+                                        data-code="@item.Product.ItemCode" 
+                                        data-name="@item.Product.ItemName"
+                                        data-lot="@item.LotNo"
+                                        data-qty="@item.OrderQty"
+                                        data-level="@item.InspectionLevel"
+                                        data-remark="@item.Remark"
+                                        data-ari="@(item.IsARI ? "1" : "0")"
+                                        data-nrs="@(item.IsNRS ? "1" : "0")"
+                                        data-ifc="@(item.IsIFC ? "1" : "0")"
+                                        data-rrs="@(item.IsRRS ? "1" : "0")"
+                                        data-efr="@(item.IsEFR ? "1" : "0")"
+                                        data-split="@(item.IsSplit ? "1" : "0")"
+                                        data-topup="@(item.IsTopup ? "1" : "0")">
+                                    <i class="fas fa-edit me-1"></i> Putusan
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                    no++;
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="10" class="text-center py-4 text-muted">Tidak ada lot dalam antrean atau proses saat ini.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    
+    <div class="oqa-table-footer">
+        <div>TOTAL @Model.Count().ToString("D2") RECORDS</div>
+        <div>INSPECTION READY</div>
+    </div>
+</div>
+
+<!-- MODAL: ORDER FORM / JUDGEMENT -->
+<div class="modal fade" id="modalOrderForm" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="border-radius: 8px; border: 1px solid var(--oqa-border);">
+            <div class="modal-header py-3" style="background: #f8fafc; border-bottom: 1px solid var(--oqa-border);">
+                <h6 class="modal-title fw-bold mb-0 text-dark"><i class="fa fa-file-lines me-2 text-primary"></i> OQA Order Inspection Form</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- MO INFORMATION TABLE -->
+                <div class="p-3 border rounded bg-light mb-3">
+                    <table style="width: 100%; font-size: 13px; line-height: 1.8;">
+                        <tbody>
+                            <tr><td style="width: 25%; color: #64748b;">MO</td><td>:</td><td class="fw-bold" style="color: var(--oqa-primary);" id="m_orderNo">--</td></tr>
+                            <tr><td style="color: #64748b;">Item No</td><td>:</td><td id="m_typeCode">--</td></tr>
+                            <tr><td style="color: #64748b;">Type</td><td>:</td><td id="m_typeName">--</td></tr>
+                            <tr><td style="color: #64748b;">Lot No</td><td>:</td><td id="m_lot">--</td></tr>
+                            <tr><td style="color: #64748b;">Quantity</td><td>:</td><td id="m_orderQty">--</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- CHECK ITEMS TABLE -->
+                <div style="font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 6px;">Check Items</div>
+                <table class="table table-bordered mb-3" style="font-size: 12.5px;">
+                    <thead class="table-light">
+                        <tr><th>Check Item</th><th style="width: 30%; text-align: center;">Status</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>PIR Failure & Measurement</td>
+                            <td class="text-center text-success fw-bold"><i class="fas fa-check"></i> OK</td>
+                        </tr>
+                        <tr>
+                            <td>MC Checklist</td>
+                            <td class="text-center text-success fw-bold"><i class="fas fa-check"></i> OK</td>
+                        </tr>
+                        <tr>
+                            <td>NRS Quality Gate</td>
+                            <td class="text-center text-success fw-bold"><i class="fas fa-check"></i> OK</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- DOKUMEN CHECKBOXES -->
+                <div class="p-3 border rounded mb-3 bg-white">
+                    <label class="form-label small fw-bold text-muted mb-2">Tag Dokumen Khusus:</label>
+                    <div class="d-flex flex-wrap gap-4 small">
+                        <div><input type="checkbox" id="m_ari" disabled> <label for="m_ari">ARI</label></div>
+                        <div><input type="checkbox" id="m_nrs" disabled> <label for="m_nrs">NRS</label></div>
+                        <div><input type="checkbox" id="m_ifc" disabled> <label for="m_ifc">IFC</label></div>
+                        <div><input type="checkbox" id="m_rrs" disabled> <label for="m_rrs">RRS</label></div>
+                        <div><input type="checkbox" id="m_efr" disabled> <label for="m_efr">EFR</label></div>
+                        <div><input type="checkbox" id="m_split" disabled> <label for="m_split">SPLIT</label></div>
+                        <div><input type="checkbox" id="m_topup" disabled> <label for="m_topup">TOPUP</label></div>
+                    </div>
+                </div>
+
+                <!-- JUDGEMENT SELECTION -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-dark mb-2">Putusan Mutu Akhir (Judgement):</label>
+                    <div class="d-flex gap-3">
+                        <div class="form-check p-3 border rounded flex-grow-1" style="background: #f0fdf4; border-color: #bbf7d0 !important;">
+                            <input class="form-check-input" type="radio" name="judgementRadio" id="judgeOK" value="OK" checked>
+                            <label class="form-check-label fw-bold text-success" for="judgeOK">
+                                <i class="fa fa-check-circle me-1"></i> PASS (OK) - Lolos Uji
+                            </label>
+                            <div class="text-muted small">Produk memenuhi seluruh standar mutu AQL. Siap rilis.</div>
+                        </div>
+                        <div class="form-check p-3 border rounded flex-grow-1" style="background: #fef2f2; border-color: #fecaca !important;">
+                            <input class="form-check-input" type="radio" name="judgementRadio" id="judgeNG" value="NG">
+                            <label class="form-check-label fw-bold text-danger" for="judgeNG">
+                                <i class="fa fa-times-circle me-1"></i> HOLD (NG) - Cacat Mutu
+                            </label>
+                            <div class="text-muted small">Terdapat temuan defect. Otomatis terbitkan tiket 5-Why.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DEFECT SECTION (SHOWN ONLY IF NG) -->
+                <div id="defectInputs" style="display: none;" class="p-3 border rounded mb-3 bg-light">
+                    <div class="row g-2">
+                        <div class="col-md-7">
+                            <label class="form-label small fw-bold">Kategori Cacat (Defect Category):</label>
+                            <select id="defectCategory" class="form-select form-select-sm">
+                                <option value="Kaki Bengkok / Terminal Rusak">Kaki Bengkok / Terminal Rusak</option>
+                                <option value="Resistansi Kontak Tinggi">Resistansi Kontak Tinggi</option>
+                                <option value="Coil Putus / Rusak">Coil Putus / Rusak</option>
+                                <option value="Dimensi Casing Out of Spec">Dimensi Casing Out of Spec</option>
+                                <option value="Goresan Visual / Kotor">Goresan Visual / Kotor</option>
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label small fw-bold">Jumlah Cacat (Defect Qty):</label>
+                            <input type="number" id="defectQty" class="form-control form-control-sm" value="1" min="1" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label small fw-bold">Remark / Catatan Inspektor:</label>
+                    <textarea class="form-control form-control-sm" id="m_remark" rows="2" placeholder="Tuliskan catatan hasil uji sampling..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer py-2" style="background: #f8fafc; border-top: 1px solid var(--oqa-border);">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal" style="border-radius: 4px;">Batal</button>
+                <button type="button" class="btn btn-sm btn-primary" id="btnSubmitJudgement" style="background: var(--oqa-primary); border-radius: 4px;">
+                    <i class="fa fa-save me-1"></i> Simpan Putusan
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            let curLedgerId = 0;
+
+            $('input[name="judgementRadio"]').change(function () {
+                if ($('#judgeNG').is(':checked')) {
+                    $('#defectInputs').slideDown();
+                } else {
+                    $('#defectInputs').slideUp();
+                }
+            });
+
+            // Click Mulai
+            $('.btn-start-insp').click(function () {
+                const id = $(this).data('id');
+                const mo = $(this).data('mo');
+
+                Swal.fire({
+                    title: `Mulai Inspeksi MO: ${mo}?`,
+                    text: 'Pencatatan waktu mulai akan aktif.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Mulai',
+                    cancelButtonText: 'Batal',
+                    customClass: { popup: 'oqa-swal-modal' }
+                }).then((res) => {
+                    if (res.isConfirmed) {
+                        $.ajax({
+                            url: '@Url.Action("StartInspection", "Inspection")',
+                            type: 'POST',
+                            contentType: 'application/json',
+                            data: JSON.stringify({
+                                ledgerId: id,
+                                inspectorId: 2,
+                                inspectionLevel: 'NORMAL'
+                            }),
+                            success: function (r) {
+                                if (r.success) {
+                                    Swal.fire('Sukses', r.message, 'success').then(() => window.location.reload());
+                                } else {
+                                    Swal.fire('Error', r.message, 'error');
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Click Putusan
+            $('.btn-open-order-form').click(function () {
+                curLedgerId = $(this).data('id');
+                $('#m_orderNo').text($(this).data('mo'));
+                $('#m_typeCode').text($(this).data('code'));
+                $('#m_typeName').text($(this).data('name'));
+                $('#m_lot').text($(this).data('lot'));
+                $('#m_orderQty').text($(this).data('qty') + ' pcs');
+
+                $('#m_ari').prop('checked', $(this).data('ari') === 1);
+                $('#m_nrs').prop('checked', $(this).data('nrs') === 1);
+                $('#m_ifc').prop('checked', $(this).data('ifc') === 1);
+                $('#m_rrs').prop('checked', $(this).data('rrs') === 1);
+                $('#m_efr').prop('checked', $(this).data('efr') === 1);
+                $('#m_split').prop('checked', $(this).data('split') === 1);
+                $('#m_topup').prop('checked', $(this).data('topup') === 1);
+
+                $('#m_remark').val($(this).data('remark') || '');
+                $('#judgeOK').prop('checked', true).trigger('change');
+
+                $('#modalOrderForm').modal('show');
+            });
+
+            // Submit Putusan
+            $('#btnSubmitJudgement').click(function () {
+                const judge = $('input[name="judgementRadio"]:checked').val();
+                const remark = $('#m_remark').val();
+                const defectCategory = $('#defectCategory').val();
+                const defectQty = parseInt($('#defectQty').val()) || 1;
+
+                $.ajax({
+                    url: '@Url.Action("FinishInspection", "Inspection")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        ledgerId: curLedgerId,
+                        judgement: judge,
+                        remark: remark,
+                        defectCategory: defectCategory,
+                        defectQty: defectQty
+                    }),
+                    success: function (res) {
+                        $('#modalOrderForm').modal('hide');
+                        if (res.success) {
+                            Swal.fire({
+                                icon: res.status === 'OK' ? 'success' : 'error',
+                                title: res.status === 'OK' ? 'PASS (OK)' : 'HOLD (NG)',
+                                text: res.message,
+                                customClass: { popup: 'oqa-swal-modal' }
+                            }).then(() => window.location.reload());
+                        } else {
+                            Swal.fire('Error', res.message, 'error');
+                        }
+                    }
+                });
+            });
+
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('demo') === '1') {
+                setTimeout(() => { $('.btn-open-order-form').first().click(); }, 300);
+            }
+        });
+    </script>
+}

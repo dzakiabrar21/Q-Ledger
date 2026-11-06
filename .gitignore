@@ -1,0 +1,27 @@
+## Build and output directories
+bin/
+obj/
+out/
+dist/
+
+## Visual Studio & IDEs
+.vs/
+.vscode/
+*.user
+*.userprefs
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Publish / Deployment
+appsettings.Production.json
+
+## Logs & temporary files
+*.log
+*.tmp
+.system_generated/
+
+## OS generated
+.DS_Store
+Thumbs.db
+desktop.ini
